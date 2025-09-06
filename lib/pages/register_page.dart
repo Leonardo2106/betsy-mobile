@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../data/repos/user_repository.dart';
+import '../data/models/user_profile.dart';
 import '../ui/ui.dart';
 import '../widgets/betsy_logo.dart';
 
@@ -17,6 +20,16 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmCtrl = TextEditingController();
   bool _showPass = false;
   bool _showConfirm = false;
+  bool _loading = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final argEmail = (ModalRoute.of(context)?.settings.arguments as String?) ?? '';
+    if (argEmail.isNotEmpty && _emailCtrl.text.isEmpty) {
+      _emailCtrl.text = argEmail;
+    }
+  }
 
   @override
   void dispose() {
@@ -27,14 +40,46 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Apenas UI: aqui você chamaria seu backend de registro
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created (UI only)')),
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _loading = true);
+    try {
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text.trim(),
       );
-      // Exemplo: ir para Home
-      Navigator.pushReplacementNamed(context, '/');
+
+      await cred.user?.updateDisplayName(_nameCtrl.text.trim());
+
+      await UserRepository.instance.upsert(
+        UserProfile(
+          uid: cred.user!.uid,
+          name: _nameCtrl.text.trim(),
+          email: _emailCtrl.text.trim(),
+        ),
+      );
+
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false);
+    } on FirebaseAuthException catch (e) {
+      final msg = switch (e.code) {
+        'email-already-in-use' => 'Email already in use',
+        'invalid-email' => 'Invalid email',
+        'weak-password' => 'Weak password (min. 6 chars)',
+        _ => e.message ?? 'Registration error',
+      };
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unexpected error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -51,7 +96,6 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Back
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
@@ -88,7 +132,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _nameCtrl,
                           hint: 'name...',
                           keyboardType: TextInputType.name,
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
                         ),
                         const SizedBox(height: 10),
                         _PillField(
@@ -107,10 +152,14 @@ class _RegisterPageState extends State<RegisterPage> {
                           hint: 'password...',
                           obscureText: !_showPass,
                           suffix: IconButton(
-                            icon: Icon(_showPass ? Icons.visibility_off : Icons.visibility, color: kGreen),
+                            icon: Icon(
+                              _showPass ? Icons.visibility_off : Icons.visibility,
+                              color: kGreen,
+                            ),
                             onPressed: () => setState(() => _showPass = !_showPass),
                           ),
-                          validator: (v) => (v != null && v.length >= 6) ? null : 'Min. 6 characters',
+                          validator: (v) =>
+                              (v != null && v.length >= 6) ? null : 'Min. 6 characters',
                         ),
                         const SizedBox(height: 10),
                         _PillField(
@@ -118,10 +167,14 @@ class _RegisterPageState extends State<RegisterPage> {
                           hint: 'confirm password...',
                           obscureText: !_showConfirm,
                           suffix: IconButton(
-                            icon: Icon(_showConfirm ? Icons.visibility_off : Icons.visibility, color: kGreen),
+                            icon: Icon(
+                              _showConfirm ? Icons.visibility_off : Icons.visibility,
+                              color: kGreen,
+                            ),
                             onPressed: () => setState(() => _showConfirm = !_showConfirm),
                           ),
-                          validator: (v) => (v == _passCtrl.text) ? null : 'Passwords do not match',
+                          validator: (v) =>
+                              (v == _passCtrl.text) ? null : 'Passwords do not match',
                         ),
                       ],
                     ),
@@ -129,13 +182,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 14),
 
-                  // Create account
-                  _WhitePillButton(label: 'Create account', onPressed: _submit),
+                  _WhitePillButton(
+                    label: _loading ? 'Creating...' : 'Create account',
+                    onPressed: _loading ? null : _submit,
+                  ),
 
                   const SizedBox(height: 10),
                   TextButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                    child: const Text('Already have an account? Log in', style: TextStyle(color: Colors.white)),
+                    onPressed: _loading
+                        ? null
+                        : () => Navigator.pushReplacementNamed(context, '/login'),
+                    child: const Text(
+                      'Already have an account? Log in',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -148,7 +208,6 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-// ---------- helpers ----------
 class _PillField extends StatelessWidget {
   const _PillField({
     required this.controller,
@@ -169,7 +228,8 @@ class _PillField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+      decoration:
+          BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
       padding: const EdgeInsets.symmetric(horizontal: 18),
       child: TextFormField(
         controller: controller,
@@ -189,7 +249,7 @@ class _PillField extends StatelessWidget {
 class _WhitePillButton extends StatelessWidget {
   const _WhitePillButton({required this.label, required this.onPressed});
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -206,4 +266,3 @@ class _WhitePillButton extends StatelessWidget {
     );
   }
 }
-
