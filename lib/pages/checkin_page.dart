@@ -13,7 +13,6 @@ class CheckInPage extends StatefulWidget {
 }
 
 class _CheckInPageState extends State<CheckInPage> {
-  // mood: 0..4 (very sad -> very happy)
   int _mood = 3;
 
   double _sleepHours = 7;
@@ -47,10 +46,9 @@ class _CheckInPageState extends State<CheckInPage> {
       );
       return;
     }
-
     if (_saving) return;
-    setState(() => _saving = true);
 
+    setState(() => _saving = true);
     try {
       final checkin = Checkin(
         mood: _mood,
@@ -66,7 +64,28 @@ class _CheckInPageState extends State<CheckInPage> {
         notes: _notesCtrl.text.trim(),
       );
 
-      await CheckinRepository.instance.createToday(uid, checkin);
+      // Se já existe checkin hoje, pede confirmação de overwrite para não ter repetição
+      final exists = await CheckinRepository.instance.existsToday(uid);
+      if (exists && mounted) {
+        final replace = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Overwrite check-in?'),
+            content: const Text('You already sent a check-in today. Replace it with the new values?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Replace')),
+            ],
+          ),
+        );
+        if (replace != true) {
+          if (mounted) setState(() => _saving = false);
+          return;
+        }
+      }
+
+      // Upsert do dia (preserva createdAt e atualiza updatedAt no repo)
+      await CheckinRepository.instance.upsertToday(uid, checkin);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -242,8 +261,10 @@ class _CheckInPageState extends State<CheckInPage> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           onPressed: _saving ? null : _submit,
-          child: Text(_saving ? 'Saving...' : 'Send check-in',
-              style: const TextStyle(fontWeight: FontWeight.w700)),
+          child: Text(
+            _saving ? 'Saving...' : 'Send check-in',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
         const SizedBox(height: 20),
       ],
@@ -337,10 +358,10 @@ class _PillField extends StatelessWidget {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           border: InputBorder.none,
-          hintText: hint,
-        ),
+          hintText: '',
+        ).copyWith(hintText: hint),
       ),
     );
   }

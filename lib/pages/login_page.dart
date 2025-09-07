@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../ui/ui.dart';
 import '../widgets/betsy_logo.dart';
-import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,7 +42,6 @@ class _LoginPageState extends State<LoginPage> {
     );
     return;
   }
-  // Não dependemos mais de fetchProviders aqui.
   Navigator.pushNamed(context, '/password', arguments: email);
   }
 

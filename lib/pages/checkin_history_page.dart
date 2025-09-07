@@ -45,10 +45,7 @@ class CheckInHistoryPage extends StatelessWidget {
                 shrinkWrap: true,
                 itemCount: items.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, i) {
-                  final c = items[i];
-                  return _CheckinTile(checkin: c);
-                },
+                itemBuilder: (context, i) => _CheckinTile(checkin: items[i]),
               );
             },
           ),
@@ -88,12 +85,10 @@ class _CheckinTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final created = checkin.createdAt;
-    final dateText = created != null
-        ? '${_two(created.day)}/${_two(created.month)}/${created.year}'
-        : 'date unknown';
+    final dateText = _formatDate(created);
 
-    final mood = checkin.mood.clamp(0, _moods.length - 1);
-    final moodData = _moods[mood];
+    final moodIndex = checkin.mood.clamp(0, _moods.length - 1);
+    final moodData = _moods[moodIndex];
 
     return Container(
       decoration: BoxDecoration(
@@ -112,13 +107,19 @@ class _CheckinTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(dateText,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                    )),
-                const SizedBox(height: 2),
-                Text(moodData.label,
-                    style: TextStyle(color: Colors.grey.shade700)),
+                Text(
+                  dateText,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                if (created != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '${_two(created.hour)}:${_two(created.minute)}',
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Text(moodData.label, style: TextStyle(color: Colors.grey.shade700)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 10,
@@ -142,8 +143,6 @@ class _CheckinTile extends StatelessWidget {
       ),
     );
   }
-
-  String _two(int v) => v.toString().padLeft(2, '0');
 }
 
 class _StatChip extends StatelessWidget {
@@ -185,3 +184,17 @@ const _moods = <_MoodInfo>[
   _MoodInfo(Icons.sentiment_satisfied, 'Good'),
   _MoodInfo(Icons.sentiment_very_satisfied, 'Great'),
 ];
+
+String _formatDate(DateTime? d) {
+  if (d == null) return 'Just now';
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final that = DateTime(d.year, d.month, d.day);
+
+  if (that == today) return 'Today';
+  if (that == today.subtract(const Duration(days: 1))) return 'Yesterday';
+
+  return '${_two(d.day)}/${_two(d.month)}/${d.year}';
+}
+
+String _two(int v) => v.toString().padLeft(2, '0');

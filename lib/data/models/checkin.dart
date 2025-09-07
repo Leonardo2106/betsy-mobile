@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // +++
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Checkin {
-  final int mood;           // 0..4
-  final double sleepHours;  // ex.: 7.5
-  final int energy;         // 0..10
-  final int stress;         // 0..10
+  final int mood; // 0..4
+  final double sleepHours; // ex.: 7.5
+  final int energy; // 0..10
+  final int stress; // 0..10
   final int waterCups;
   final bool meditated;
   final bool exercised;
@@ -12,7 +12,7 @@ class Checkin {
   final String goals;
   final String gratitude;
   final String notes;
-  final DateTime? createdAt;  // já existia
+  final DateTime? createdAt;
 
   Checkin({
     required this.mood,
@@ -43,12 +43,10 @@ class Checkin {
         'goals': goals,
         'gratitude': gratitude,
         'notes': notes,
-        'createdAt': createdAt,
       };
 
   factory Checkin.fromMap(Map<String, dynamic> m) {
     final habits = (m['habits'] as Map?) ?? {};
-    // NEW: createdAt
     DateTime? created;
     final raw = m['createdAt'];
     if (raw is Timestamp) created = raw.toDate();
@@ -66,7 +64,7 @@ class Checkin {
       goals: (m['goals'] ?? '') as String,
       gratitude: (m['gratitude'] ?? '') as String,
       notes: (m['notes'] ?? '') as String,
-      createdAt: created, // NEW
+      createdAt: created,
     );
   }
 }
