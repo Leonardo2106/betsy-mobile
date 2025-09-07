@@ -30,6 +30,7 @@ class HomePage extends StatelessWidget {
               TileButton(icon: Icons.wifi_tethering, label: 'Connection', onTap: () => Navigator.pushNamed(context, '/connection')),
               // TileButton(icon: Icons.build_outlined, label: 'Tools', onTap: () {}),
               TileButton(icon: Icons.error_outline, label: 'Alert', onTap: () => Navigator.pushNamed(context, '/alert')),
+              TileButton(icon: Icons.chat_bubble, label: 'Betsy', onTap: () => Navigator.pushNamed(context, '/chat')),
             ],
           ),
         ),

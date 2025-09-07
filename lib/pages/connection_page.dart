@@ -10,7 +10,7 @@ class ConnectionPage extends StatelessWidget {
       title: 'Connection',
       children: const [
         Divider(height: 1),
-        ListTile(title: Text('Wi-Fi')),
+        ListTile(title: Text('Connection')),
         Divider(height: 1),
         ListTile(title: Text('Bluetooth')),
         Divider(height: 1),

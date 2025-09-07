@@ -15,3 +15,4 @@ export 'alert_page.dart';
 
 export 'checkin_page.dart';
 export 'checkin_history_page.dart';
+export 'chatbot_page.dart';
