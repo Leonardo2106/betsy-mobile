@@ -1,4 +1,3 @@
-import 'package:betsy/services/notifications_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -26,6 +25,7 @@ Future<void> main() async {
     FlutterError.presentError(details);
     debugPrint('FlutterError: ${details.exceptionAsString()}\n${details.stack}');
   };
+
   runApp(const BetsyApp());
 }
 
@@ -78,6 +78,7 @@ class BetsyApp extends StatelessWidget {
         // Services
         '/checkin': (_) => const CheckInPage(),
         '/checkin-history': (_) => const CheckInHistoryPage(),
+        // Chat (Gemini)
         '/chat': (_) => const ChatPage(),
       },
     );
@@ -89,7 +90,6 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Se o firebase não estiver disponível, cai no login sem morrer.
     try {
       return StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),

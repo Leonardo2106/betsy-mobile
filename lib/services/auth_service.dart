@@ -12,7 +12,6 @@ class AuthService {
   Stream<User?> get authState => _auth.authStateChanges();
   User? get user => _auth.currentUser;
 
-  // <-- aqui: parâmetro POSICIONAL
   Future<List<String>> fetchProviders(String email) =>
       _auth.fetchSignInMethodsForEmail(email);
 

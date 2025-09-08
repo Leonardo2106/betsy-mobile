@@ -12,9 +12,7 @@ class HealthyPage extends StatelessWidget {
         Divider(height: 1),
         ListTile(title: Text('Water intake')),
         Divider(height: 1),
-        ListTile(title: Text('Nutrition')),
-        Divider(height: 1),
-        ListTile(title: Text('Checkups')),
+        ListTile(title: Text('Mood')),
         Divider(height: 1),
       ],
     );

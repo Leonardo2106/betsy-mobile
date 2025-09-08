@@ -16,7 +16,7 @@ class UserProfile {
   Map<String, dynamic> toMap() => {
         'name': name,
         'email': email,
-        'createdAt': createdAt, // Firestore aceita DateTime/Timestamp
+        'createdAt': createdAt,
       };
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> m) {

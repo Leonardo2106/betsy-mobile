@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Checkin {
   final int mood; // 0..4
-  final double sleepHours; // ex.: 7.5
+  final double sleepHours; // 7.5 >> 7 horas e 30 minutos
   final int energy; // 0..10
   final int stress; // 0..10
   final int waterCups;

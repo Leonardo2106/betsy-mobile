@@ -14,7 +14,7 @@ class ProfilePage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      // caso extremo (sem sessão): manda pro login
+      // caso extremo -> manda pro login
       Future.microtask(() =>
           Navigator.pushNamedAndRemoveUntil(context, '/login', (r) => false));
       return const Scaffold(body: SizedBox.shrink());
@@ -56,10 +56,6 @@ class ProfilePage extends StatelessWidget {
                   child: Text(email, style: TextStyle(color: Colors.grey.shade700)),
                 ),
                 const SizedBox(height: 20),
-                const Divider(height: 1),
-                _Item(title: 'more info', onTap: () {}),
-                const Divider(height: 1),
-                _Item(title: 'help', onTap: () {}),
                 const Divider(height: 1),
                 _Item(
                   title: 'logout',

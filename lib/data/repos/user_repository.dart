@@ -6,7 +6,6 @@ class UserRepository {
   static final instance = UserRepository._();
   final _db = FirebaseFirestore.instance;
 
-  // Sem converter para simplificar o set com serverTimestamp
   DocumentReference<Map<String, dynamic>> _doc(String uid) =>
       _db.collection('users').doc(uid);
 

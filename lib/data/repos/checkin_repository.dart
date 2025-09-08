@@ -6,7 +6,6 @@ class CheckinRepository {
   static final instance = CheckinRepository._();
   final _db = FirebaseFirestore.instance;
 
-  // yyyy-MM-dd << HORA e LOCAL do dispositivo da pessoa
   String _key(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -29,7 +28,6 @@ class CheckinRepository {
     );
   }
 
-  /// Verifica se já existe check-in hoje (para confirmar overwrite).
   Future<bool> existsToday(String uid, {DateTime? now}) async {
     final dayKey = _key(now ?? DateTime.now());
     final snap = await _col(uid).doc(dayKey).get();
